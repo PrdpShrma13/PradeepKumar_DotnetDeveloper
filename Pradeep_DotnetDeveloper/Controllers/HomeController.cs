@@ -3,6 +3,7 @@ using Pradeep_DotnetDeveloper.Data.Models;
 using Pradeep_DotnetDeveloper.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -17,7 +18,7 @@ namespace Pradeep_DotnetDeveloper.Controllers
             _dbContext = new ApplicationDbContext();
         }
         [HttpGet]
-        public ActionResult GetStudents(string filterBy = "FirstName")
+        public ActionResult GetStudents()
         {
             IEnumerable<SubjectViewModel> subjects = _dbContext.Subjects.Select(x => new SubjectViewModel()
             {
@@ -29,14 +30,14 @@ namespace Pradeep_DotnetDeveloper.Controllers
             if (!subjects.Any())
                 subjects = addSubjects();
 
-            IEnumerable<StudentViewModel> students = _dbContext.Students.Select(x => new StudentViewModel()
-            {
-                Id = x.Id,
-                Class = x.Class,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                StudentMarks = x.StudentMarks
-            }).OrderBy(x => filterBy).ToList();
+            IEnumerable<StudentViewModel> students = _dbContext.Students.Include(x => x.StudentMarks).Select(x => new StudentViewModel()
+                {
+                    Id = x.Id,
+                    Class = x.Class,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    StudentMarks = x.StudentMarks
+                }).ToList();
 
             StudentListViewModel studentList = new StudentListViewModel();
             studentList.Students = students;
@@ -49,15 +50,15 @@ namespace Pradeep_DotnetDeveloper.Controllers
         {
             try
             {
-                IEnumerable<StudentViewModel> students = _dbContext.Students.Where(x=>x.Id == id).Select(x => new StudentViewModel()
+                StudentViewModel student = _dbContext.Students.Where(x => x.Id == id).Select(x => new StudentViewModel()
                 {
                     Id = x.Id,
                     Class = x.Class,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
                     StudentMarks = x.StudentMarks
-                }).ToList();
-                return View();
+                }).First();
+                return Json(student, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
@@ -66,7 +67,7 @@ namespace Pradeep_DotnetDeveloper.Controllers
         }
 
         [HttpPost]
-        public ActionResult PostStudent(StudentViewModel model)
+        public ActionResult PostStudent(StudentInputViewModel model)
         {
             try
             {
@@ -96,33 +97,51 @@ namespace Pradeep_DotnetDeveloper.Controllers
             }
         }
 
-        [HttpPut]
-        public ActionResult PutStudent(StudentViewModel model)
+        [HttpPost]
+        public ActionResult PutStudent(StudentInputViewModel model)
         {
             try
             {
                 Student student = _dbContext.Students.Where(x => x.Id == model.Id).FirstOrDefault();
-                student.FirstName = model.FirstName;
-                student.LastName = model.LastName;
-                student.Class = model.Class;
-                _dbContext.Students.Add(student);
-                _dbContext.SaveChanges();
-                List<StudentMark> studentMark = _dbContext.StudentMark.Where(x => x.SubjectId == model.Id).ToList();
-                foreach (var item in model.StudentMarks)
+                if (student != null)
                 {
-                    var marks = studentMark.Where(x => x.SubjectId == item.SubjectId).FirstOrDefault();
-                    if (marks != null)
+                    student.FirstName = model.FirstName;
+                    student.LastName = model.LastName;
+                    student.Class = model.Class;
+                    _dbContext.Students.Add(student);
+                    _dbContext.SaveChanges();
+                    List<StudentMark> studentMark = _dbContext.StudentMark.Where(x => x.StudentId == model.Id).ToList();
+                    foreach (var item in model.StudentMarks)
                     {
-                        marks.Marks = item.Marks;
+                        var marks = studentMark.Where(x => x.SubjectId == item.SubjectId).FirstOrDefault();
+                        if (marks != null)
+                            marks.Marks = item.Marks;
                     }
+                    _dbContext.SaveChanges();
                 }
-                _dbContext.SaveChanges();
                 return RedirectToAction("GetStudents");
             }
             catch (Exception ex)
             {
                 throw ex;
             }
+        }
+
+        public ActionResult DeleteStudent(int id)
+        {
+            List<StudentMark> studentMarks = _dbContext.StudentMark.Where(x => x.StudentId == id).ToList();
+            if (studentMarks.Any())
+            {
+                foreach (var studentMark in studentMarks)
+                {
+                    _dbContext.StudentMark.Remove(studentMark);
+                    _dbContext.SaveChanges();
+                }
+            }
+            Student student = _dbContext.Students.Where(x => x.Id == id).FirstOrDefault();
+            _dbContext.Students.Remove(student);
+            _dbContext.SaveChanges();
+            return RedirectToAction("GetStudents");
         }
 
 

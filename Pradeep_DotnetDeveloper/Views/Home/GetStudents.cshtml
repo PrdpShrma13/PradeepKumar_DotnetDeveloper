@@ -6,27 +6,31 @@
 
 <h2 class="text-center">Students</h2>
 
-<div style="margin-top:30px;">
-    <div></div>
-    <div></div>
+<div style="margin-top:30px; margin-bottom:70px">
     <div class="pull-right">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addStudentModal">
+        <button type="button" class="btn btn-primary" onclick="AddStudent()">
             Add Student
         </button>
     </div>
 </div>
 
 <div>
-    <table class="table">
+    <table class="table" id="students">
         <thead>
             <tr>
-                <th>Id</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Class</th>
-                <th>Subject</th>
-                <th>Marks</th>
-                <th>Action</th>
+                <th width="10%">Id</th>
+                <th width="15%">First Name</th>
+                <th width="15%">Last Name</th>
+                <th width="15%">Class</th>
+                <th width="30%">
+                    <table>
+                        <tr>
+                            <th width="50%">Subject</th>
+                            <th width="50%">Marks</th>
+                        </tr>
+                    </table>
+                </th>
+                <th width="15%">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -37,11 +41,20 @@
                     <td>@item.FirstName</td>
                     <td>@item.LastName</td>
                     <td>@item.Class</td>
-                    <td></td>
-                    <td></td>
                     <td>
-                        @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                        @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+                        <table>
+                            @foreach (var marks in @item.StudentMarks)
+                            {
+                                @*<tr>
+                                   < <td>@marks.Subject.SubjectName</td>
+                                    <td>@marks.Marks/td>
+                                </tr>*@
+                            }
+                        </table>
+                    </td>
+                    <td>
+                        <a onclick="getStudent(@item.Id)">Edit</a>|
+                        @Html.ActionLink("Delete", "DeleteStudent", new {  id=item.Id  })
                     </td>
                 </tr>
             }
@@ -59,14 +72,22 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" style="min-height:400px">
+            <div class="modal-body" style="height:350px">
                 <form id="studentForm">
+                    <div class="col-md-12" id="studentIdDiv" style="margin:10px">
+                        <div class="col-md-5">
+                            <label for="firstName">Student Id</label>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" name="studentId" id="studentId" disabled />
+                        </div>
+                    </div>
                     <div class="col-md-12" style="margin:10px">
                         <div class="col-md-5">
                             <label for="firstName">First Name</label>
                         </div>
                         <div class="col-md-5">
-                            <input type="text" name="firstName" id="firstName" placeholder="First Name" />
+                            <input type="text" name="firstName" id="firstName" placeholder="First Name" required />
                         </div>
                     </div>
                     <div class="col-md-12" style="margin:10px">
@@ -74,7 +95,7 @@
                             <label for="lastName">Last Name</label>
                         </div>
                         <div class="col-md-5">
-                            <input type="text" name="lastName" id="lastName" placeholder="Last Name" />
+                            <input type="text" name="lastName" id="lastName" placeholder="Last Name" required />
                         </div>
                     </div>
                     <div class="col-md-12" style="margin:10px">
@@ -82,7 +103,7 @@
                             <label for="standerd">Class</label>
                         </div>
                         <div class="col-md-5">
-                            <input type="text" name="standerd" id="standerd" placeholder="Class" />
+                            <input type="text" name="standerd" id="standerd" placeholder="Class" required />
                         </div>
                     </div>
                     <div class="col-md-12" style="margin:10px">
@@ -90,7 +111,7 @@
                             <label for="subject">Subjects</label>
                         </div>
                         <div class="col-md-5">
-                            <label for="marrks">Marks</label>
+                            <label for="marrks">Marks/100</label>
                         </div>
                     </div>
                     <div class="col-md-12" style="margin:10px">
@@ -100,21 +121,63 @@
                                 <input type="text" id="@item.Id-@item.SubjectName" placeholder="@item.SubjectName" disabled />
                             </div>
                             <div class="col-md-5">
-                                <input type="number" id="@item.SubjectName.ToLower()marks" placeholder="Marks" />
+                                <input type="number" id="@item.SubjectName.ToLower()marks" placeholder="Marks" min="0" max="100" />
                             </div>
                         }
                     </div>
                 </form>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" onclick="SaveStudent()">Save changes</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="addStudentButton" onclick="SaveStudent()">Add Student</button>
+                <button type="button" class="btn btn-primary" id="updateStudentButton" onclick="UpdateStudent()">Update Student</button>
+            </div>
         </div>
     </div>
 </div>
 
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js" defer></script>
 <script>
+    $(document).ready(function () {
+        var studentIdDiv = document.getElementById("studentIdDiv");
+        studentIdDiv.style.display = "none";
+        var addStudentButton = document.getElementById("addStudentButton");
+        addStudentButton.style.display = "none";
+        var updateStudentButton = document.getElementById("updateStudentButton");
+        updateStudentButton.style.display = "none";
+       $('#students').dataTable({
+            "paging": true,
+            "ordering": true,
+            "info": true,
+           "searching": true,
+           "columnDefs": [
+               { "orderable": false, "targets": 4 }
+           ],
+            "pagingType": "full_numbers",
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "scrollCollapse": true,
+            "responsive": true
+        });
+    });
+
+    function AddStudent() {
+        document.getElementById('addStudentModalLabel').innerHTML = "Add Student";
+        var studentIdDiv = document.getElementById("studentIdDiv");
+        studentIdDiv.style.display = "none";
+        var addStudentButton = document.getElementById("addStudentButton");
+        addStudentButton.style.display = "inline";
+        var updateStudentButton = document.getElementById("updateStudentButton");
+        updateStudentButton.style.display = "none";
+
+        document.getElementById("studentId").value = "";
+        document.getElementById("firstName").value = "";
+        document.getElementById("lastName").value = "";
+        document.getElementById("standerd").value = "";
+        $("#addStudentModal").modal("show");
+    }
+
     function SaveStudent() {
         var firstName = document.getElementById("firstName").value;
         if (firstName.length < 1) {
@@ -134,39 +197,103 @@
             return;
         }
         var marks = [];
-        if (document.getElementById("mathmarks").value.length > 0) {
-            var marksArray = [{
-                subjectId: 1,
-                marks: parseInt(document.getElementById("mathmarks").value)
-            }]
-            marks.push(marksArray);
+        var subjects = @Html.Raw(Json.Encode(Model.Subjects));
+        for (var i = 0; i < subjects.length; i++) {
+            var getmarks = document.getElementById(subjects[i].SubjectName.toLowerCase() + "marks").value;
+            if (getmarks.length > 0) {
+                var marksArray = {
+                    subjectId: subjects[i].Id,
+                    marks: getmarks
+                }
+                marks.push(marksArray);
+            }
         }
-        if (document.getElementById("physicsmarks").value.length > 0) {
-            var marksArray = [{
-                subjectId: 2,
-                marks: parseInt(document.getElementById("physicsmarks").value)
-            }]
-            marks.push(marksArray);
+        var data = {
+            firstName: firstName,
+            lastName: lastName,
+            class: standerd,
+            studentMarks: marks
         }
-        if (document.getElementById("chemistrymarks").value.length > 0) {
-            var marksArray = [{
-                subjectId: 3,
-                marks: parseInt(document.getElementById("chemistrymarks").value)
-            }]
-            marks.push(marksArray);
-        }
-        debugger
-        $.post("/Home/PostStudent",
-            {
-                firstName: firstName,
-                lastName: lastName,
-                class: standerd,
-                StudentMarks: marks
-            },
-            function (data) {
-               
-            });
+        $.ajax({
+            type: "POST",
+            url: '/Home/PostStudent',
+            data: data,
+            success: function (data) {
+                $("#addStudentModal").modal("hide");
+                alert("Student Saved");
+            }
+        });
     }
 
+    function UpdateStudent() {
+        var studentId = document.getElementById("studentId").value;
+        var firstName = document.getElementById("firstName").value;
+        if (firstName.length < 1) {
+            alert("Please Enter First Name");
+            return;
+        }
+        var lastName = document.getElementById("lastName").value;
+        if (lastName.length < 1) {
+            alert("Please Enter Last Name");
+            return;
+        }
+        var standerd = document.getElementById("standerd").value;
+        if (standerd.length < 1) {
+            alert("Please Enter Class");
+            return;
+        }
+        var marks = [];
+        var subjects = @Html.Raw(Json.Encode(Model.Subjects));
+        for (var i = 0; i < subjects.length; i++) {
+            var getmarks = document.getElementById(subjects[i].SubjectName.toLowerCase() + "marks").value;
+            if (getmarks.length > 0) {
+                var marksArray = {
+                    subjectId: subjects[i].Id,
+                    marks: getmarks
+                }
+                marks.push(marksArray);
+            }
+        }
+        var data = {
+            id: studentId,
+            firstName: firstName,
+            lastName: lastName,
+            class: standerd,
+            studentMarks: marks
+        }
+        $.ajax({
+            type: "Post",
+            url: '/Home/PutStudent',
+            data: data,
+            success: function (data) {
+                $("#addStudentModal").modal("hide");
+                alert("Student Saved");
+            }
+        });
+    }
 
+    function getStudent(id) {
+        $.ajax({
+            type: "Get",
+            url: '/Home/GetStudent?id='+id,
+            success: function (data) {
+                document.getElementById('addStudentModalLabel').innerHTML = "Update Student";
+                var studentIdDiv = document.getElementById("studentIdDiv");
+                studentIdDiv.style.display = "Block";
+                var addStudentButton = document.getElementById("addStudentButton");
+                addStudentButton.style.display = "none";
+                var updateStudentButton = document.getElementById("updateStudentButton");
+                updateStudentButton.style.display = "inline";
+                document.getElementById("studentId").value = data.Id;
+                document.getElementById("firstName").value = data.FirstName;
+                document.getElementById("lastName").value = data.LastName;
+                document.getElementById("standerd").value = data.Class;
+                var subjects = @Html.Raw(Json.Encode(Model.Subjects));
+                //for (var i = 0; i < data.StudentMarks.length; i++) {
+                //    document.getElementById(data.StudentMarks[i].Subject.SubjectName.toLowerCase() + "marks").value;
+                //}
+                $("#addStudentModal").modal("show");
+            }
+        });
+    }
 </script>

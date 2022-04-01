@@ -136,6 +136,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\StudentInputViewModel.cs" />
     <Compile Include="Models\StudentMarksViewModel.cs" />
     <Compile Include="Models\StudentViewModel.cs" />
     <Compile Include="Models\StudentListViewModel.cs" />
