@@ -11,7 +11,7 @@ namespace Pradeep_DotnetDeveloper.Data.Models
         public int SubjectId { get; set; }
         public int StudentId { get; set; }
         public int Marks { get; set; }
-        public Subject Subject { get; set; }
+        public virtual Subject Subject { get; set; }
 
     }
 }

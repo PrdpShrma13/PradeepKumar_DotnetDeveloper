@@ -30,7 +30,7 @@ namespace Pradeep_DotnetDeveloper.Controllers
             if (!subjects.Any())
                 subjects = addSubjects();
 
-            IEnumerable<StudentViewModel> students = _dbContext.Students.Include(x => x.StudentMarks).Select(x => new StudentViewModel()
+            IEnumerable<StudentViewModel> students = _dbContext.Students.Select(x => new StudentViewModel()
                 {
                     Id = x.Id,
                     Class = x.Class,

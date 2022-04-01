@@ -11,6 +11,6 @@ namespace Pradeep_DotnetDeveloper.Data.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Class { get; set; }
-        public ICollection<StudentMark> StudentMarks { get; set; }
+        public virtual ICollection<StudentMark> StudentMarks { get; set; }
     }
 }

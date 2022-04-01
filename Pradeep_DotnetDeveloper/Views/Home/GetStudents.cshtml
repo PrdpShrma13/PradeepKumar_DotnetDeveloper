@@ -26,7 +26,7 @@
                     <table>
                         <tr>
                             <th width="50%">Subject</th>
-                            <th width="50%">Marks</th>
+                            <th width="50%" class="text-right">Marks</th>
                         </tr>
                     </table>
                 </th>
@@ -45,16 +45,16 @@
                         <table>
                             @foreach (var marks in @item.StudentMarks)
                             {
-                                @*<tr>
-                                   < <td>@marks.Subject.SubjectName</td>
-                                    <td>@marks.Marks/td>
-                                </tr>*@
+                                <tr>
+                                    <td width="50%">@marks.Subject.SubjectName</td>
+                                    <td width="50%" class="text-right">@marks.Marks</td>
+                                </tr>
                             }
                         </table>
                     </td>
                     <td>
                         <a onclick="getStudent(@item.Id)">Edit</a>|
-                        @Html.ActionLink("Delete", "DeleteStudent", new {  id=item.Id  })
+                        @Html.ActionLink("Delete", "DeleteStudent", new { id = item.Id })
                     </td>
                 </tr>
             }
@@ -221,6 +221,7 @@
             success: function (data) {
                 $("#addStudentModal").modal("hide");
                 alert("Student Saved");
+                window.location = "/Home/GetStudents";
             }
         });
     }
@@ -268,6 +269,7 @@
             success: function (data) {
                 $("#addStudentModal").modal("hide");
                 alert("Student Saved");
+                window.location = "/Home/GetStudents";
             }
         });
     }
@@ -289,9 +291,9 @@
                 document.getElementById("lastName").value = data.LastName;
                 document.getElementById("standerd").value = data.Class;
                 var subjects = @Html.Raw(Json.Encode(Model.Subjects));
-                //for (var i = 0; i < data.StudentMarks.length; i++) {
-                //    document.getElementById(data.StudentMarks[i].Subject.SubjectName.toLowerCase() + "marks").value;
-                //}
+                for (var i = 0; i < data.StudentMarks.length; i++) {
+                    document.getElementById(data.StudentMarks[i].Subject.SubjectName.toLowerCase() + "marks").value = data.StudentMarks[i].Marks;
+                }
                 $("#addStudentModal").modal("show");
             }
         });
